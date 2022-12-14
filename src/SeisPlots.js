@@ -34,7 +34,7 @@ export const SeisPlots = ({
     })
   }, [xRange]);
 
-    useGlobalKeys({
+  useGlobalKeys({
     ArrowRight: () => setYRange((prev) => prev / 2),
     ArrowLeft: () => setYRange((prev) => prev * 2),
   });
@@ -93,6 +93,7 @@ export const SeisPlots = ({
 
       const max = Math.max(...maxes);
 
+      const letterOffset = data[0].x.length / 40;
       const [p, s] = seis.waves;
       let shapes;
       let annotations;
@@ -117,22 +118,22 @@ export const SeisPlots = ({
         ]
         annotations = [
           {
-            x: p,
-            y: 0.5,
+            x: p - letterOffset,
+            y: 1,
             xref: 'x',
             yref: 'paper',
             text: 'P',
             showarrow: false,
-            font: { size: 24 }
+            font: { size: 14 }
           },
           {
-            x: s,
-            y: 0.5,
+            x: s - letterOffset,
+            y: 1,
             xref: 'x',
             yref: 'paper',
             text: 'S',
             showarrow: false,
-            font: { size: 24 }
+            font: { size: 14 }
           }
         ]
       }

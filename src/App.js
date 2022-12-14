@@ -12,6 +12,7 @@ import {TextField} from "@consta/uikit/TextField";
 import {Button} from "@consta/uikit/Button";
 import {useGlobalKeys} from "@consta/uikit/useGlobalKeys";
 import {SeisPlots} from "./SeisPlots";
+import {log} from "seisplotjs/dist/module/util";
 
 function App() {
   const [timeRange, setTimeRange] = useState([RANGE_START, RANGE_END]);
@@ -103,6 +104,7 @@ function App() {
       let tmp = map.get(station);
       tmp[phase === 'P' ? 0 : 1] = date;
       map.set(station, tmp);
+      console.log(tmp[0].getTime());
     }
 
     return map;
