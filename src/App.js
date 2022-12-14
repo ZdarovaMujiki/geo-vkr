@@ -1,18 +1,17 @@
 import React, {useState} from 'react';
 import {filter, miniseed} from 'seisplotjs';
-import SeisPlot from './SeisPlot';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 import {presetGpnDefault, Theme} from "@consta/uikit/Theme";
 import {DatePicker} from "@consta/uikit/DatePicker";
 import {RANGE_END, RANGE_START} from "./util/constants";
 import {fetchData, fetchEvents, fetchStations, fetchWaves} from "./util/api";
-import {ChoiceGroup} from "@consta/uikit/ChoiceGroup";
-import {TextField} from "@consta/uikit/TextField";
 import {Button} from "@consta/uikit/Button";
 import {useGlobalKeys} from "@consta/uikit/useGlobalKeys";
 import {SeisPlots} from "./SeisPlots";
-import {log} from "seisplotjs/dist/module/util";
+import {Sidebar} from '@consta/uikit/Sidebar';
+import {CustomTextField} from "./components/CustomTextField";
+import {CustomChoiceGroup} from "./components/CustomChoiceGroup";
 
 function App() {
   const [timeRange, setTimeRange] = useState([RANGE_START, RANGE_END]);
@@ -21,6 +20,7 @@ function App() {
   const [yRange, setYRange] = useState(1000);
   const [events, setEvents] = useState([]);
   const [isGlobal, setIsGlobal] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = React.useState(true);
 
   const [seisMap, setSeis] = useState(new Map());
   const updateSeis = (key, value) => {
@@ -42,8 +42,7 @@ function App() {
   useGlobalKeys({
     g: () => setIsGlobal(true),
     l: () => setIsGlobal(false),
-    // ArrowRight: () => setYRange(yRange / 2),
-    // ArrowLeft: () => setYRange(yRange * 2),
+    q: () => setIsSidebarOpen(!isSidebarOpen),
   });
 
   async function getStations(network) {
@@ -134,55 +133,64 @@ function App() {
 
   return (
     <Theme preset={presetGpnDefault}>
-      <div className='controlls'>
-        <DatePicker
-          value={timeRange}
-          type="date-time-range"
-          onChange={({value}) => setTimeRange(value)}
-        />
-        Сети:
-        <ChoiceGroup
-          getItemLabel={(item) => item}
-          items={["8b", "KA"]}
-          value={network}
-          name="networks"
-          onChange={(e) => {
-            setNetwork(e.value);
-            getEvents(e.value);
-          }}
-        />
-        Порядок:
-        <TextField
-          min={0}
-          value={order}
-          onChange={({value}) => setOrder(Number(value))}
-        />
-        Угловая частота:
-        <TextField
-          min={0}
-          value={frequency}
-          onChange={({value}) => setFrequency(Number(value))}
-        />
-      </div>
+      <Sidebar position="left" isOpen={isSidebarOpen} onClickOutside={() => setIsSidebarOpen(false)}>
+        <Sidebar.Content>
+          <div className='controlls'>
+            <DatePicker
+              style={{width: "100%"}}
+              value={timeRange[0]}
+              type="date-time"
+              onChange={({value}) => setTimeRange([value, timeRange[1]])}
+            />
+            <DatePicker
+              style={{width: "100%"}}
+              value={timeRange[1]}
+              type="date-time"
+              onChange={({value}) => setTimeRange([timeRange[0], value])}
+            />
+            <CustomTextField
+              text="Порядок"
+              value={order}
+              onChange={({value}) => setOrder(Number(value))}
+            />
+            <CustomTextField
+              text="Угловая частота"
+              value={frequency}
+              onChange={({value}) => setFrequency(Number(value))}
+            />
+            <CustomChoiceGroup
+              items={["8b", "KA"]}
+              value={network}
+              name="networks"
+              onChange={(e) => {
+                setNetwork(e.value);
+                getEvents(e.value);
+              }}
+            />
+            <div className='eventButtons'>
+              {events.map((event, index) =>
+                <Button
+                  key={index}
+                  value={event}
+                  onClick={() => {
+                    getData(event);
+                    setIsSidebarOpen(false);
+                  }}
+                  label={`${event.time.toLocaleString()} M:${event.mag}`}
+                  style={{textAlign: "center", padding: "0 8px"}}
+                />
+              )}
+            </div>
+          </div>
+        </Sidebar.Content>
+      </Sidebar>
       {events.length === 0 ? '' :
         <div className='subj'>
-          <div className='eventButtons'>
-            {events.map((event, index) =>
-              <Button
-                key={index}
-                value={event}
-                onClick={() => getData(event)}
-                label={`${event.time.toLocaleString()} M:${event.mag}`}
-                style={{textAlign: "left", padding: "0 8px"}}
-              />
-            )}
-          </div>
           <SeisPlots
             seisMap={seisMap}
             isGlobal={isGlobal}
             setXRange={setXRange}
             xRange={xRange}
-            // yRange={yRange}
           />
         </div>
       }
