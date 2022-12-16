@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {filter, miniseed} from 'seisplotjs';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -12,6 +12,8 @@ import {SeisPlots} from "./SeisPlots";
 import {Sidebar} from '@consta/uikit/Sidebar';
 import {CustomTextField} from "./components/CustomTextField";
 import {CustomChoiceGroup} from "./components/CustomChoiceGroup";
+import io from 'socket.io-client';
+import {SnackBar} from "@consta/uikit/SnackBar";
 
 function App() {
   const [timeRange, setTimeRange] = useState([RANGE_START, RANGE_END]);
@@ -20,7 +22,8 @@ function App() {
   const [yRange, setYRange] = useState(1000);
   const [events, setEvents] = useState([]);
   const [isGlobal, setIsGlobal] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = React.useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [snackBarItems, setSnackBarItems] = useState([]);
 
   const [seisMap, setSeis] = useState(new Map());
   const updateSeis = (key, value) => {
@@ -45,6 +48,30 @@ function App() {
     q: () => setIsSidebarOpen(!isSidebarOpen),
   });
 
+  useEffect(() => {
+    const socket = io("localhost:8000/", {
+      cors: {
+        origin: "http://localhost:3000/",
+        credentials: true,
+      },
+    });
+
+    socket.on("ask", async (data) => {
+      await new Promise(r => setTimeout(r, 10000));
+      socket.emit("ask");
+    });
+
+    socket.on("events", async (data) => {
+      console.log("new events");
+      setSnackBarItems([...snackBarItems, "Новые события: " + data.length]);
+      await getEvents("KA");
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
+
   async function getStations(network) {
     const text = await fetchStations(network);
     let lines = text.split('\n').slice(1, -1);
@@ -65,7 +92,7 @@ function App() {
     let events = [];
     lines.forEach(line => {
       let attrs = line.split('|');
-      events.push({id: attrs[0], time: new Date(attrs[1] + 'Z'), mag: attrs[10]});
+      events.push({id: attrs[0], time: new Date(attrs[1] + 'Z'), mag: attrs[10], checked: false});
     });
     setEvents(events);
   }
@@ -133,6 +160,28 @@ function App() {
 
   return (
     <Theme preset={presetGpnDefault}>
+      <div style={{display: "flex", flexDirection: "row-reverse", position: "absolute", zIndex: 100, width: "100%", padding: 10}}>
+        <SnackBar
+          style={{display: "flex", alignItems: "flex-end"}}
+          items={snackBarItems}
+          getItemMessage={(item) => item}
+          getItemActions={(item) => {
+            return [{
+              label: "Посмотреть",
+              onClick: () => {
+                getEvents("KA");
+                setIsSidebarOpen(true);
+                setSnackBarItems(snackBarItems.filter(i => i !== item));
+              }
+            },
+              {
+                label: "Закрыть",
+                onClick: () => setSnackBarItems(snackBarItems.filter(i => i !== item))
+              }
+            ]
+          }}
+        />
+      </div>
       <Sidebar position="left" isOpen={isSidebarOpen} onClickOutside={() => setIsSidebarOpen(false)}>
         <Sidebar.Content>
           <div className='controlls'>
@@ -175,9 +224,11 @@ function App() {
                   onClick={() => {
                     getData(event);
                     setIsSidebarOpen(false);
+                    events[index].checked = true;
+                    setEvents(events);
                   }}
                   label={`${event.time.toLocaleString()} M:${event.mag}`}
-                  style={{textAlign: "center", padding: "0 8px"}}
+                  style={{textAlign: "center", padding: "0 8px", backgroundColor: event.checked ? "#0078d2" : "orange"}}
                 />
               )}
             </div>
