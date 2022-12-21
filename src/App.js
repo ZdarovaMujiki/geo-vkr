@@ -4,8 +4,8 @@ import {filter, miniseed} from 'seisplotjs';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import {presetGpnDefault, Theme} from "@consta/uikit/Theme";
 import {DatePicker} from "@consta/uikit/DatePicker";
-import {RANGE_END, RANGE_START} from "./util/constants";
-import {fetchData, fetchEvents, fetchStations, fetchWaves} from "./util/api";
+import {EventStatus, RANGE_END, RANGE_START} from "./util/constants";
+import {fetchData, fetchEvents, fetchStations, fetchWaves, removeEvent} from "./util/api";
 import {Button} from "@consta/uikit/Button";
 import {useGlobalKeys} from "@consta/uikit/useGlobalKeys";
 import {SeisPlots} from "./SeisPlots";
@@ -24,6 +24,7 @@ function App() {
   const [isGlobal, setIsGlobal] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [snackBarItems, setSnackBarItems] = useState([]);
+  const [currentEventId, setCurrentEventId] = useState(null);
 
   const [seisMap, setSeis] = useState(new Map());
   const updateSeis = (key, value) => {
@@ -92,7 +93,12 @@ function App() {
     let events = [];
     lines.forEach(line => {
       let attrs = line.split('|');
-      events.push({id: attrs[0], time: new Date(attrs[1] + 'Z'), mag: attrs[10], checked: false});
+      events.push({
+        id: attrs[0],
+        time: new Date(attrs[1] + 'Z'),
+        mag: attrs[10],
+        status: EventStatus.NEW
+      });
     });
     setEvents(events);
   }
@@ -216,7 +222,7 @@ function App() {
                 getEvents(e.value);
               }}
             />
-            <div className='eventButtons'>
+            <div className="eventButtons">
               {events.map((event, index) =>
                 <Button
                   key={index}
@@ -224,14 +230,41 @@ function App() {
                   onClick={() => {
                     getData(event);
                     setIsSidebarOpen(false);
-                    events[index].checked = true;
+                    events[index].status = EventStatus.CHECKED;
+                    setCurrentEventId(index);
                     setEvents(events);
                   }}
                   label={`${event.time.toLocaleString()} M:${event.mag}`}
-                  style={{textAlign: "center", padding: "0 8px", backgroundColor: event.checked ? "#0078d2" : "orange"}}
+                  style={{
+                    textAlign: "center",
+                    padding: "0 8px",
+                    backgroundColor: event.status === EventStatus.NEW ? "#ffa500"
+                      : event.status === EventStatus.CHECKED ? "#0078d2" : "#008000"
+                  }}
                 />
               )}
             </div>
+
+            {currentEventId !== null && events[currentEventId].status !== EventStatus.APPROVED && (
+              <div style={{display: "flex", justifyContent: "space-between", width: "100%", height: "100%", alignItems: "flex-end"}}>
+                <Button
+                  label="Это событие"
+                  onClick={() => {
+                    events[currentEventId].status = EventStatus.APPROVED;
+                    setEvents(events);
+                    setCurrentEventId(null);
+                  }}
+                />
+                <Button
+                  label="Это не событие"
+                  onClick={() => {
+                    setEvents(events.filter(event => event !== events[currentEventId]));
+                    setCurrentEventId(null);
+                    removeEvent(events[currentEventId].id);
+                  }}
+                />
+              </div>
+            )}
           </div>
         </Sidebar.Content>
       </Sidebar>
