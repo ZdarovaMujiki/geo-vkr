@@ -28,7 +28,7 @@ export const fetchWaves = async (eventId) => {
     includearrivals: "true",
     eventid: eventId,
   });
-  // console.log(`${BASE_FDSNWS_URL}/event/1/query?${params.toString()}`);
+  console.log(`${BASE_FDSNWS_URL}/event/1/query?${params.toString()}`);
 
   const response = await fetch(`${BASE_FDSNWS_URL}/event/1/query?${params.toString()}`);
   return await response.text();

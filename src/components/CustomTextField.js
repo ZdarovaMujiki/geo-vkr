@@ -3,10 +3,11 @@ import React from "react";
 
 export const CustomTextField = (props) => {
   return <div style={{display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 5}}>
-    <p style={{width: "60%", margin: 0}}>
+    <p style={{margin: 0}}>
       {props.text}
     </p>
     <TextField
+      style={{width: "90%"}}
       min={0}
       {...props}
     />

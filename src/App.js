@@ -20,10 +20,13 @@ function App() {
   const [network, setNetwork] = useState();
   const [xRange, setXRange] = useState(timeRange);
   const [yRange, setYRange] = useState(1000);
+  // localStorage.getItem('events').split(';').map(event => JSON.parse(event));
+  // console.log(localStorage.getItem('events')?.split(';').slice(1));
+  // const [events, setEvents] = useState(localStorage.getItem('events')?.split(';').slice(1).map(event => JSON.parse(event)) || []);
   const [events, setEvents] = useState([]);
   const [isGlobal, setIsGlobal] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [snackBarItems, setSnackBarItems] = useState([]);
+  const [snackBarItems, setSnackBarItems] = useState(["Новые события: 8"]);
   const [currentEventId, setCurrentEventId] = useState(null);
 
   const [seisMap, setSeis] = useState(new Map());
@@ -101,6 +104,9 @@ function App() {
       });
     });
     setEvents(events);
+    // const eventString = events.reduce((prev, cur) => prev + ';' + JSON.stringify(cur));
+    // console.log(eventString);
+    // localStorage.setItem('events', eventString);
   }
 
   async function getWaves(event) {
@@ -136,7 +142,6 @@ function App() {
       let tmp = map.get(station);
       tmp[phase === 'P' ? 0 : 1] = date;
       map.set(station, tmp);
-      console.log(tmp[0].getTime());
     }
 
     return map;
@@ -203,16 +208,24 @@ function App() {
               type="date-time"
               onChange={({value}) => setTimeRange([timeRange[0], value])}
             />
+            <hr style={{margin: 0}}/>
+            <p style={{textAlign: "center", margin: 0}}>
+              Настройки фильтра верхних частот
+            </p>
             <CustomTextField
-              text="Порядок"
+              text="N"
               value={order}
               onChange={({value}) => setOrder(Number(value))}
             />
             <CustomTextField
-              text="Угловая частота"
+              text="CF"
               value={frequency}
               onChange={({value}) => setFrequency(Number(value))}
             />
+            <hr style={{margin: 0}}/>
+            <p style={{textAlign: "center", margin: 0}}>
+              Выбор сети
+            </p>
             <CustomChoiceGroup
               items={["8b", "KA"]}
               value={network}
@@ -223,6 +236,9 @@ function App() {
               }}
             />
             <div className="eventButtons">
+              {events.length > 0 &&
+                <hr style={{margin: 0}}/>
+              }
               {events.map((event, index) =>
                 <Button
                   key={index}
