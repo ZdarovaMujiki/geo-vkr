@@ -20,14 +20,12 @@ function App() {
   const [network, setNetwork] = useState();
   const [xRange, setXRange] = useState(timeRange);
   const [yRange, setYRange] = useState(1000);
-  // localStorage.getItem('events').split(';').map(event => JSON.parse(event));
-  // console.log(localStorage.getItem('events')?.split(';').slice(1));
-  // const [events, setEvents] = useState(localStorage.getItem('events')?.split(';').slice(1).map(event => JSON.parse(event)) || []);
   const [events, setEvents] = useState([]);
   const [isGlobal, setIsGlobal] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [snackBarItems, setSnackBarItems] = useState(["Новые события: 8"]);
+  const [snackBarItems, setSnackBarItems] = useState([]);
   const [currentEventId, setCurrentEventId] = useState(null);
+  // const [eventsAmount, setEventsAmount] = useState(0);
 
   const [seisMap, setSeis] = useState(new Map());
   const updateSeis = (key, value) => {
@@ -53,27 +51,30 @@ function App() {
   });
 
   useEffect(() => {
-    const socket = io("localhost:8000/", {
-      cors: {
-        origin: "http://localhost:3000/",
-        credentials: true,
-      },
-    });
+    let eventsAmount = 0;
+    const fetchData = async () => {
+      try {
+        const response = await fetch('http://84.237.89.72:8080/fdsnws/event/1/query?format=text');
+        const text = await response.text();
 
-    socket.on("ask", async (data) => {
-      await new Promise(r => setTimeout(r, 10000));
-      socket.emit("ask");
-    });
-
-    socket.on("events", async (data) => {
-      console.log("new events");
-      setSnackBarItems([...snackBarItems, "Новые события: " + data.length]);
-      await getEvents("KA");
-    });
-
-    return () => {
-      socket.disconnect();
+        const newEventsAmount = text.split('\n').length - 2;
+        console.log(newEventsAmount);
+        console.log(eventsAmount);
+        if (newEventsAmount > eventsAmount) {
+          setSnackBarItems([...snackBarItems, "Новые события: " + newEventsAmount]);
+        }
+        eventsAmount = newEventsAmount;
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
     };
+
+    fetchData();
+
+    const intervalId = setInterval(fetchData, 10000);
+
+    return () => clearInterval(intervalId);
+
   }, []);
 
   async function getStations(network) {
@@ -104,9 +105,6 @@ function App() {
       });
     });
     setEvents(events);
-    // const eventString = events.reduce((prev, cur) => prev + ';' + JSON.stringify(cur));
-    // console.log(eventString);
-    // localStorage.setItem('events', eventString);
   }
 
   async function getWaves(event) {

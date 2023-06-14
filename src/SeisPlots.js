@@ -6,7 +6,6 @@ import Plotly from 'plotly.js-dist'
 
 export const SeisPlots = ({
   seisMap,
-  // yRange,
   xRange,
   setXRange,
   isGlobal,
@@ -15,10 +14,7 @@ export const SeisPlots = ({
   const [maxY, setMaxY] = useState(1000);
 
   const setRange = (range) => {
-    // console.log(range);
-    // console.log(xRange);
     if (range[0] !== undefined) {
-      // console.log("NE");
       setXRange(range);
     }
   }

@@ -8,6 +8,5 @@ const butterworth = filter.createButterworth(
   0.005);
 
 export function applyFilter(seismogram) {
-  // return filter.applyFilter(butterworth, seismogram);
   return seismogram;
 }

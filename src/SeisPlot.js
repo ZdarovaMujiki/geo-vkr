@@ -88,27 +88,6 @@ function SeisPlot({
   }
   const [plot, setPlot] = useState(layout);
 
-  // useEffect(() => {
-  //   // plot.xaxis.range = range;
-  //   // plot.yaxis.range = [-yRange, +yRange];
-  //   // plot.yaxis2.range = [-yRange, +yRange];
-  //   // plot.yaxis3.range = [-yRange, +yRange];
-  //   // setPlot(plot);
-  //
-  //   // Plotly.newPlot(id.toString(), {
-  //   //   "data": [{ "y": [-yRange, yRange] }],
-  //   //   "layout": { "width": '100%', "height": '100%' }
-  //   // });
-  //   Plotly.relayout(id.toString(), {
-  //     'xaxis.range': range,
-  //     'yaxis.range': [-yRange, +yRange],
-  //     'yaxis2.range': [-yRange, +yRange],
-  //     'yaxis3.range': [-yRange, +yRange],
-  //     }
-  //   );
-  // }, [range, yRange]);
-  // }, [plot, range, yRange]);
-
   function merge(segmentArray) {
     console.log(seis[0].stationCode + ' merged');
     let tmp = [];
